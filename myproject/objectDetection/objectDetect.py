@@ -26,6 +26,8 @@ Usage: import the module (see Jupyter notebooks for examples), or run from
 
     *** in my code ***
     train --dataset=F:\MaskRCNN\Mask_RCNN\myproject\objectDetection\objectsDatasets --weights=coco
+    train --dataset=F:\MaskRCNN\Mask_RCNN\myproject\objectDetection\reducedDatasets --weights=coco
+
 
     # Resume training a model that you had trained earlier
     python3 objectDetect.py train --dataset=/path/to/balloon/dataset --weights=last
@@ -36,9 +38,18 @@ Usage: import the module (see Jupyter notebooks for examples), or run from
     # Apply color splash to an image
     python3 balloon.py splash --weights=/path/to/weights/file.h5 --image=<URL or path to file>
 
+    mycode
+    splash --weights=last --image=F:\MaskRCNN\Mask_RCNN\myproject\objectDetection\reducedDatasets\valing\images\20181210_093540_631_R_2.jpg
+
     # Apply color splash to video using the last weights you trained
     python3 balloon.py splash --weights=last --video=<URL or path to file>
 
+    #??splash --weights=F:\MaskRCNN\Mask_RCNN\myproject\objectDetection\newcoco.h5 --image=F:\MaskRCNN\Mask_RCNN\myproject\objectDetection\objectsDatasets\val
+
+    # Run COCO evaluatoin on the last model you trained
+
+    python3 coco.py evaluate --dataset=/path/to/coco/ --model=last
+    evaluate --dataset=F:\MaskRCNN\Mask_RCNN\myproject\objectDetection\reducedDatasets --weights=last
 """
 
 """
@@ -56,6 +67,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import re
 import time
+import random
 
 
 # Root directory of the project
@@ -89,18 +101,15 @@ class ObjectDetectionConfig(Config):
     # Give the configuration a recognizable name
     NAME = "objectDetection"
 
-    # NUMBER OF GPUs to use. When using only a CPU, this needs to be set to 1.
-    GPU_COUNT = 2
-
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
-    IMAGES_PER_GPU = 1
+    IMAGES_PER_GPU = 2
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 5  # Background + building-ground classes
 
     # Number of training steps per epoch
-    STEPS_PER_EPOCH = 100
+    STEPS_PER_EPOCH = 500
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
@@ -157,12 +166,12 @@ class ObjectDetectionDataset(utils.Dataset):
 
 
         # Train or validation dataset?
-        assert subset in ["train", "val"]
+        assert subset in ["training", "valing"]
         dataset_dir = os.path.join(dataset_dir, subset)
 
         # dataset_dir = 'F:\MaskRCNN\Mask_RCNN\myproject\objectDetection\objectsDatasets\\training'
         # dataset_dir = 'F:\MaskRCNN\Mask_RCNN\myproject\objectDetection\objectsDatasets\\valing'
-        annotations = json.load(open(os.path.join(dataset_dir, "regions.json")))
+        # annotations = json.load(open(os.path.join(dataset_dir, "regions.json")))
         annotationsPath = os.path.join(dataset_dir, "labels") #new
         labelNames = [x for x in os.listdir(annotationsPath) if ".png" in x] #new
 
@@ -214,14 +223,16 @@ class ObjectDetectionDataset(utils.Dataset):
         Dont worry about this dictionary, this is configuration about the annotation software.     
 
         '''
-
-        annotations = annotations['_via_img_metadata']  # we just extract the metadata
-        annotations = list(annotations.values())  # don't need the dict keys
+        '''
+        old version
+        '''
+        # annotations = annotations['_via_img_metadata']  # we just extract the metadata
+        # annotations = list(annotations.values())  # don't need the dict keys
 
         # The VIA tool saves images in the JSON even if they don't have any
         # annotations. Skip unannotated images.
 
-        annotations = [a for a in annotations if a['regions']]
+        # annotations = [a for a in annotations if a['regions']]
         # print(annotations[0])
 
         '''
@@ -278,24 +289,38 @@ class ObjectDetectionDataset(utils.Dataset):
         '''
 
         # Add images
+        print("start to load images")
+        middle = int(len(labelNames) / 3)
+        print("middle",middle)
+        labelNames = labelNames[middle:]
+
         for name in labelNames:
 
             # load_mask() needs the image size to convert polygons to masks, the new is to give the
             # path directly to polygons
             # Unfortunately, VIA doesn't include it in JSON, so we must read
             # the image. This is only managable since the dataset is tiny.
-            imageName = name.split(".")[0] + ".jpg"
+            imageName = "images\\" + name.split(".")[0] + ".jpg"
+            labelName = "labels\\"+ name
+
+            # get paths
             image_path = os.path.join(dataset_dir, imageName)
+            label_path = os.path.join(dataset_dir, labelName)
 
-            label_path = os.path.join(dataset_dir, name)
+            # get images
             label_image = skimage.io.imread(label_path)
-
             image = skimage.io.imread(image_path)
+
             '''
             show the image to check
             '''
-            # imgplot = plt.imshow(image)
+            # plt.imshow(image)
             # plt.show()
+            # plt.imshow(label_image)
+            # plt.show()
+            '''
+            '''
+
             height, width = image.shape[:2]
 
             self.add_image(
@@ -373,14 +398,16 @@ class ObjectDetectionDataset(utils.Dataset):
         # 5, ground_equipment [128   0 128] pink
         '''
 
-        classList = {[128,   0,   0]: 1,
-                     [0,   128,   0]: 2,
-                     [128, 128,   0]: 3,
-                     [0,     0, 128]: 4,
-                     [128,   0, 128]: 5,
+
+        classList = {1: np.array([128, 0, 0]),
+                     2: np.array([0, 128, 0]),
+                     3: np.array([128, 128, 0]),
+                     4: np.array([0, 0, 128]),
+                     5: np.array([128, 0, 128]),
                      }
 
-        mask = np.zeros([info["height"], info["width"], len(classList.keys())], dtype=np.uint8)
+
+        hasPolygonClass = []
 
         for element in classList:
 
@@ -389,13 +416,30 @@ class ObjectDetectionDataset(utils.Dataset):
             image = np.where(image == classList[element], 1, 255)
             image = np.sum(image, axis=-1)
             image = np.where(image == 3, 1, 0)
-            # # check if load the mask right
+            if np.sum(image) != 0:
+                hasPolygonClass.append(element)
+
+
+        mask = np.zeros([info["height"], info["width"], len(hasPolygonClass)], dtype=np.uint8)
+        class_ids = []
+
+        for i in range(len(hasPolygonClass)):
+            image = label_image
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image = np.where(image == classList[hasPolygonClass[i]], 1, 255)
+            image = np.sum(image, axis=-1)
+            image = np.where(image == 3, 1, 0)
+            # # # check if load the mask right
             # plt.imshow(image, cmap=plt.get_cmap('gray'))
             # plt.show()
 
-            mask[:, :, element - 1] = image
+            mask[:, :, i] = image
+            class_ids.append(hasPolygonClass[i])
 
-        class_ids = np.array([int(r['Objects']) for r in classes])
+        mask = np.array(mask)
+        class_ids = np.array(class_ids)
+        # print("mask",mask.shape)
+        # print("classid",class_ids)
 
 
         return mask.astype(np.bool), class_ids
@@ -413,12 +457,12 @@ def train(model):
     """Train the model."""
     # Training dataset.
     dataset_train = ObjectDetectionDataset()    # This is a class
-    dataset_train.load_objects(args.dataset, "train")
+    dataset_train.load_objects(args.dataset, "training")
     dataset_train.prepare()
 
     # Validation dataset
     dataset_val = ObjectDetectionDataset()  # This is a class
-    dataset_val.load_objects(args.dataset, "val")
+    dataset_val.load_objects(args.dataset, "valing")
     dataset_val.prepare()
 
     '''
@@ -428,10 +472,10 @@ def train(model):
     image_ids = np.random.choice(dataset_train.image_ids, 4)
 
     print("####")
-    print(dataset_train.image_ids)
-    print(image_ids)
+    print("all image loaded", dataset_train.image_ids)
+    print("images selected to show", image_ids)
     for image_id in image_ids:
-        print(image_id)
+        # print(image_id)
         image = dataset_train.load_image(image_id)
 
         # cv2.imshow('image', image)
@@ -449,7 +493,7 @@ def train(model):
     print("Training network heads")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=1,
+                epochs=100,
                 layers='heads')
 
 
@@ -637,9 +681,42 @@ if __name__ == '__main__':
     # Train or evaluate
     if args.command == "train":
         train(model)
-    # elif args.command == "splash":
-    #     detect_and_color_splash(model, image_path=args.image,
-    #                             video_path=args.video)
+    elif args.command == "splash":
+        detect_and_color_splash(model, image_path=args.image,
+                                video_path=args.video)
+    elif args.command == "evaluate":
+
+        '''
+        actually these are done above
+        '''
+        # Create model object in inference mode.
+        # model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
+        # model = modellib.MaskRCNN(mode="inference", config=config, model_dir=args.logs)
+        # print(weights_path)
+        # model.load_weights(weights_path, by_name=True)
+
+        '''
+        '''
+
+        class_names = ['building_roof', 'ground_cars', 'building_facade', 'ground_cars', 'building_roof']
+        # Load a random image from the images folder
+        IMAGE_DIR = os.path.join(ROOT_DIR, "myimages")
+        file_names = next(os.walk(IMAGE_DIR))[2]
+        print(file_names)
+        # image = skimage.io.imread(os.path.join(IMAGE_DIR, random.choice(file_names)))
+
+        for name in file_names:
+            image = skimage.io.imread(os.path.join(IMAGE_DIR, name))
+            # Run detection
+            results = model.detect([image], verbose=1)
+
+            # Visualize results
+            r = results[0]
+            # print(r['rois'])
+            visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'],
+                                        class_names, r['scores'])
+
+
     else:
         print("'{}' is not recognized. "
               "Use 'train' or 'splash'".format(args.command))
