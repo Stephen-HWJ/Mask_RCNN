@@ -89,6 +89,9 @@ class ObjectDetectionConfig(Config):
     # Give the configuration a recognizable name
     NAME = "objectDetection"
 
+    # NUMBER OF GPUs to use. When using only a CPU, this needs to be set to 1.
+    GPU_COUNT = 0
+
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
     IMAGES_PER_GPU = 1
