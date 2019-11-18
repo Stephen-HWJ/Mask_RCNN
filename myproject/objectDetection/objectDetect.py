@@ -90,7 +90,7 @@ class ObjectDetectionConfig(Config):
     NAME = "objectDetection"
 
     # NUMBER OF GPUs to use. When using only a CPU, this needs to be set to 1.
-    GPU_COUNT = 0
+    GPU_COUNT = 2
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
@@ -157,7 +157,7 @@ class ObjectDetectionDataset(utils.Dataset):
 
 
         # Train or validation dataset?
-        assert subset in ["training", "valing"]
+        assert subset in ["train", "val"]
         dataset_dir = os.path.join(dataset_dir, subset)
 
         # dataset_dir = 'F:\MaskRCNN\Mask_RCNN\myproject\objectDetection\objectsDatasets\\training'
