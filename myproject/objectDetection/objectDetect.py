@@ -300,8 +300,8 @@ class ObjectDetectionDataset(utils.Dataset):
             # path directly to polygons
             # Unfortunately, VIA doesn't include it in JSON, so we must read
             # the image. This is only managable since the dataset is tiny.
-            imageName = "images\\" + name.split(".")[0] + ".jpg"
-            labelName = "labels\\"+ name
+            imageName = "images/" + name.split(".")[0] + ".jpg"
+            labelName = "labels/"+ name
 
             # get paths
             image_path = os.path.join(dataset_dir, imageName)
