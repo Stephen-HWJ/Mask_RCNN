@@ -101,6 +101,8 @@ class ObjectDetectionConfig(Config):
     # Give the configuration a recognizable name
     NAME = "objectDetection"
 
+    GPU_COUNT = 2
+
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
     IMAGES_PER_GPU = 2
@@ -109,7 +111,7 @@ class ObjectDetectionConfig(Config):
     NUM_CLASSES = 1 + 5  # Background + building-ground classes
 
     # Number of training steps per epoch
-    STEPS_PER_EPOCH = 500
+    STEPS_PER_EPOCH = 250
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
@@ -493,7 +495,7 @@ def train(model):
     print("Training network heads")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=100,
+                epochs=50,
                 layers='heads')
 
 
