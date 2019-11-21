@@ -103,6 +103,10 @@ class ObjectDetectionConfig(Config):
 
     GPU_COUNT = 2
 
+    # IMAGE_CHANNEL_COUNT = 4
+
+    # MEAN_PIXEL = np.array([123.7, 116.8, 103.9, 100]) # maybe change for later
+
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
     IMAGES_PER_GPU = 1
@@ -115,6 +119,16 @@ class ObjectDetectionConfig(Config):
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
+
+
+'''
+############################################################
+#  Reload some classes for four channel images (RGB-Thermal)
+############################################################
+'''
+
+# IS_RGBD = True
+
 
 
 '''
@@ -454,6 +468,20 @@ class ObjectDetectionDataset(utils.Dataset):
         else:
             super(self.__class__, self).image_reference(image_id)
 
+    # def load_image(self, image_id):
+    #     """Load the specified image and return a [H,W,3] Numpy array.
+    #         or [H, W, 4] array
+    #     """
+    #     # Load image
+    #     image = skimage.io.imread(self.image_info[image_id]['path'])
+    #     # If grayscale. Convert to RGB for consistency.
+    #     # if image.ndim != 3:
+    #     #     image = skimage.color.gray2rgb(image)
+    #     # If has an alpha channel, remove it for consistency
+    #     if image.shape[-1] == 4 and not IS_RGBD:
+    #         image = image[..., :3]
+    #     return image
+
 
 def train(model):
     """Train the model."""
@@ -479,6 +507,7 @@ def train(model):
     for image_id in image_ids:
         # print(image_id)
         image = dataset_train.load_image(image_id)
+        print(image.shape)
 
         # cv2.imshow('image', image)
         # cv2.waitKey(0)
