@@ -165,15 +165,9 @@ class ObjectDetectionDataset(utils.Dataset):
         1-> dataset_dir: Root directory of the dataset.
         2-> subset: Subset to load: train or val
 
-
         """
         # Add classes. We have five classes to add.
-        # self.add_class("building_roof",         1, "building_roof")
-        # self.add_class("building_facade",       2, "building_facade")
-        # self.add_class("building_equipment",    3, "building_equipment")
-        # self.add_class("ground_cars",           4, "ground_cars")
-        # self.add_class("ground_equipment",      5, "ground_equipment")
-
+        
         self.add_class("objectDetection", 1, "building_roof")
         self.add_class("objectDetection", 2, "building_facade")
         self.add_class("objectDetection", 3, "building_equipment")
@@ -192,115 +186,6 @@ class ObjectDetectionDataset(utils.Dataset):
         labelNames = [x for x in os.listdir(annotationsPath) if ".png" in x] #new
 
         '''
-        The annotation is a dict:
-        dict_keys(['_via_attributes', '_via_settings', '_via_img_metadata'])
-        <1> annotations['_via_attributes']
-        index one stores a dictionary describing the options for classes:
-        1, building_roof
-        2, building_facade
-        3, building_equipment
-        4, ground_cars
-        5, ground_equipment
-
-        <2> annotation['_via_img_metadata']
-        index two stores a dictionary describing the datasets of all annotations:
-            #   {'20181210_093147_331_R.JPG3510965':
-
-                    {   'filename': '28503151_5b5b7ec140_b.jpg',
-                        'regions': 
-                            [   {
-                                    'region_attributes': { {'objects'}: '3'},
-                                    'shape_attributes': 
-                                    {
-                                        'all_points_x': [...],
-                                        'all_points_y': [...],
-                                        'name': 'polygon'}
-                                    }
-                                },  # this is the first region
-                                {
-                                    'region_attributes': { {'objects'}: '3'},
-                                    'shape_attributes': 
-                                    {
-                                        'all_points_x': [...],
-                                        'all_points_y': [...],
-                                        'name': 'polygon'}
-                                    }
-                                },  # this is the second region
-                                ... more regions ...
-                            ] # regions are stored in a list[]  
-
-                        'size': 100202
-                    }
-                  '20181210_093147_331_R.JPG3510965': {}
-                  '20181210_093147_331_R.JPG3510965': {}
-                  ... more images ...
-                 }
-        <3> annotation['_via_settings']
-        Dont worry about this dictionary, this is configuration about the annotation software.     
-
-        '''
-        '''
-        old version
-        '''
-        # annotations = annotations['_via_img_metadata']  # we just extract the metadata
-        # annotations = list(annotations.values())  # don't need the dict keys
-
-        # The VIA tool saves images in the JSON even if they don't have any
-        # annotations. Skip unannotated images.
-
-        # annotations = [a for a in annotations if a['regions']]
-        # print(annotations[0])
-
-        '''
-        Add images-Old Version
-        
-        '''
-        # # Add images
-        # for a in annotations:
-        #     # print(a)
-        #     # Get the x, y coordinaets of points of the polygons that make up
-        #     # the outline of each object instance. These are stores in the
-        #     # shape_attributes (see json format above)
-        #
-        #     '''
-        #     Below is an example version:::
-        #     # The if condition is needed to support VIA versions 1.x and 2.x.
-        #
-        #     if type(a['regions']) is dict:
-        #         polygons = [r['shape_attributes'] for r in a['regions'].values()]
-        #     else:
-        #         polygons = [r['shape_attributes'] for r in a['regions']]
-        #     '''
-        #
-        #     # polygons = [r['shape_attributes'] for r in a['regions']]
-        #     '''
-        #     Pay attention here, the example version will put polygons to "polygons=a" in "self.add_image"
-        #     but here needs some changes, we will give a to "self.add_image" directly, cuz we will use a later.
-        #     '''
-        #
-        #     # print(polygons)
-        #
-        #     # load_mask() needs the image size to convert polygons to masks.
-        #     # Unfortunately, VIA doesn't include it in JSON, so we must read
-        #     # the image. This is only managable since the dataset is tiny.
-        #     image_path = os.path.join(dataset_dir, a['filename'])
-        #     image = skimage.io.imread(image_path)
-        #     '''
-        #     show the image to check
-        #     '''
-        #     # imgplot = plt.imshow(image)
-        #     # plt.show()
-        #     height, width = image.shape[:2]
-        #
-        #     self.add_image(
-        #         "objectDetection",
-        #         image_id=a['filename'],  # use file name as a unique image id
-        #         path=image_path,
-        #         width=width, height=height,
-        #         polygons=a)
-
-
-        '''
         Add images - New Version
         '''
 
@@ -316,16 +201,22 @@ class ObjectDetectionDataset(utils.Dataset):
             # path directly to polygons
             # Unfortunately, VIA doesn't include it in JSON, so we must read
             # the image. This is only managable since the dataset is tiny.
-            imageName = "images/" + name.split(".")[0] + ".jpg"
+            imageName = "rgb/" + name.split(".")[0] + ".jpg"
             labelName = "labels/"+ name
+            thermalName = "thermals/" + name.split(".")[0] + ".jpg"
 
             # get paths
             image_path = os.path.join(dataset_dir, imageName)
             label_path = os.path.join(dataset_dir, labelName)
+            thermal_path = os.path.join(dataset_dir, thermalName)
 
             # get images
             label_image = skimage.io.imread(label_path)
             image = skimage.io.imread(image_path)
+            thermal_image = skimage.io.imread(thermal_path)
+            
+            thermal_image = thermal_image[:,:,0]
+            image = np.concatenate((image,thermal_image),axis=2)
 
             '''
             show the image to check
@@ -363,36 +254,6 @@ class ObjectDetectionDataset(utils.Dataset):
         # Convert polygons to a bitmap mask of shape
         # [height, width, instance_count]
         info = self.image_info[image_id]
-
-
-        '''
-        old version
-        '''
-        #
-        # '''
-        # # Get the x, y coordinaets of points of the polygons that make up
-        # # the outline of each object instance. These are stores in the
-        # # shape_attributes (see json format above)
-        # '''
-        # a = info["polygons"]
-        # polygons = [r['shape_attributes'] for r in a['regions']]
-        # classes = [r['region_attributes'] for r in a['regions']]
-        #
-        # mask = np.zeros([info["height"], info["width"], len(polygons)],
-        #                 dtype=np.uint8)
-        #
-        # for i, p in enumerate(polygons):
-        #     # Get indexes of pixels inside the polygon and set them to 1
-        #     rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
-        #     mask[rr, cc, i] = 1
-        #
-        # # Return mask, and array of class IDs of each instance. Since we have
-        # # one class ID only, we return an array of 1s XXXXX
-        # # Actually this is not an array of 1s. This should be adjusted.
-        #
-        # # class_ids = np.ones([mask.shape[-1]], dtype=np.int32) # This will not be used, cuz not all are 1.
-        # class_ids = np.array([int(r['Objects']) for r in classes])
-
 
         '''
         new Version
