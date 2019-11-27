@@ -89,7 +89,7 @@ DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 # Path to trained weights file
 COCO_WEIGHTS_PATH = os.path.join(DEFAULT_LOGS_DIR, "mask_rcnn_objectdetection_0024.h5")
 
-ADD_THERMAL_CHANNEL = False
+ADD_THERMAL_CHANNEL = True
 
 '''
 ############################################################
@@ -107,8 +107,7 @@ class ObjectDetectionConfig(Config):
 
     if ADD_THERMAL_CHANNEL:
     	IMAGE_CHANNEL_COUNT = 4
-
-    # MEAN_PIXEL = np.array([123.7, 116.8, 103.9, 100]) # maybe change for later
+    	MEAN_PIXEL = np.array([123.7, 116.8, 103.9, 100]) # maybe change for later
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
@@ -122,16 +121,6 @@ class ObjectDetectionConfig(Config):
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
-
-
-'''
-############################################################
-#  Reload some classes for four channel images (RGB-Thermal)
-############################################################
-'''
-
-# IS_RGBD = True
-
 
 
 '''
@@ -206,39 +195,19 @@ class ObjectDetectionDataset(utils.Dataset):
             # path directly to polygons
             # Unfortunately, VIA doesn't include it in JSON, so we must read
             # the image. This is only managable since the dataset is tiny.
-            imageName = "/rgb/" + name.split(".")[0] + ".jpg"
+
+            imageName = "/rgb/" + name[:-3] + "jpg"
             labelName = "/label/"+ name
 
-            # get paths
+            # # get paths
             image_path = dataset_dir + imageName
             label_path = dataset_dir + labelName
 
-            # get images
+            # # get images
             label_image = skimage.io.imread(label_path)
-            image = skimage.io.imread(image_path)
+            # image = skimage.io.imread(image_path)
 
-            # thermal channel added
-            if ADD_THERMAL_CHANNEL:
-	            thermalName = "thermal/" + name.split(".")[0] + ".jpg"
-	            thermal_path = os.path.join(dataset_dir, thermalName)
-	            thermal_image = skimage.io.imread(thermal_path)           
-	            thermal_image = thermal_image[:,:,0].reshape((image.shape[0], image.shape[1], 1))
-	            image = np.concatenate((image,thermal_image),axis=2)
-
-            '''
-            show the image to check
-            '''
-            # if ADD_THERMAL_CHANNEL:
-            # 	plt.imshow(image[:, :, 4])
-            # else:
-            # 	plt.imshow(image)
-            # plt.show()
-            # plt.imshow(label_image)
-            # plt.show()
-            '''
-            '''
-
-            height, width = image.shape[:2]
+            height, width = label_image.shape[:2]
 
             self.add_image(
                 "objectDetection",
@@ -339,19 +308,28 @@ class ObjectDetectionDataset(utils.Dataset):
         else:
             super(self.__class__, self).image_reference(image_id)
 
-    # def load_image(self, image_id):
-    #     """Load the specified image and return a [H,W,3] Numpy array.
-    #         or [H, W, 4] array
-    #     """
-    #     # Load image
-    #     image = skimage.io.imread(self.image_info[image_id]['path'])
-    #     # If grayscale. Convert to RGB for consistency.
-    #     # if image.ndim != 3:
-    #     #     image = skimage.color.gray2rgb(image)
-    #     # If has an alpha channel, remove it for consistency
-    #     if image.shape[-1] == 4 and not IS_RGBD:
-    #         image = image[..., :3]
-    #     return image
+    def load_image(self, image_id):
+        """Load the specified image and return a [H,W,3] Numpy array.
+            or [H, W, 4] array
+        """
+        # Load image
+        image = skimage.io.imread(self.image_info[image_id]['path'])
+
+        # thermal channel added
+        if ADD_THERMAL_CHANNEL:
+            thermal_path = self.image_info[image_id]['path'].replace('rgb', 'thermal')
+            thermal_image = skimage.io.imread(thermal_path)           
+            thermal_image = thermal_image[:,:,0].reshape((image.shape[0], image.shape[1], 1))
+            image = np.concatenate((image,thermal_image),axis=2)
+            return image
+
+        # If grayscale. Convert to RGB for consistency.
+        # if image.ndim != 3:
+        #     image = skimage.color.gray2rgb(image)
+        # If has an alpha channel, remove it for consistency
+        if image.shape[-1] == 4 and not ADD_THERMAL_CHANNEL:
+            image = image[..., :3]
+        return image
 
 
 def train(model):
@@ -578,7 +556,11 @@ if __name__ == '__main__':
             "mrcnn_class_logits", "mrcnn_bbox_fc",
             "mrcnn_bbox", "mrcnn_mask"])
     else:
-        model.load_weights(weights_path, by_name=True)
+    	if ADD_THERMAL_CHANNEL:
+    		model.load_weights(weights_path, by_name=True, exclude=['conv1'])
+    	else:
+    		model.load_weights(weights_path, by_name=True)
+
 
     # Train or evaluate
     if args.command == "train":
