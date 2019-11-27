@@ -187,7 +187,6 @@ class ObjectDetectionDataset(utils.Dataset):
         # annotations = json.load(open(os.path.join(dataset_dir, "regions.json")))
         annotationsPath = os.path.join(dataset_dir, "label") #new
         labelNames = [x for x in os.listdir(annotationsPath) if ".png" in x] #new
-        print([i for i in labelNames if '20181210_092634' in i])
 
         '''
         Add images - New Version
@@ -213,7 +212,6 @@ class ObjectDetectionDataset(utils.Dataset):
             # get paths
             image_path = dataset_dir + imageName
             label_path = dataset_dir + labelName
-            # print(image_path, label_path)
 
             # get images
             label_image = skimage.io.imread(label_path)
