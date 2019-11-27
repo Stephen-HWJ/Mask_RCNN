@@ -82,12 +82,14 @@ from mrcnn import model as modellib, utils
 from mrcnn import visualize
 from mrcnn.model import log
 
-# Path to trained weights file
-COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
-
 # Directory to save logs and model checkpoints, if not provided
 # through the command line argument --logs
 DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
+
+# Path to trained weights file
+COCO_WEIGHTS_PATH = os.path.join(DEFAULT_LOGS_DIR, "mask_rcnn_objectdetection_0024.h5")
+
+ADD_THERMAL_CHANNEL = False
 
 '''
 ############################################################
@@ -103,7 +105,8 @@ class ObjectDetectionConfig(Config):
 
     GPU_COUNT = 2
 
-    # IMAGE_CHANNEL_COUNT = 4
+    if ADD_THERMAL_CHANNEL:
+    	IMAGE_CHANNEL_COUNT = 4
 
     # MEAN_PIXEL = np.array([123.7, 116.8, 103.9, 100]) # maybe change for later
 
@@ -182,8 +185,9 @@ class ObjectDetectionDataset(utils.Dataset):
         # dataset_dir = 'F:\MaskRCNN\Mask_RCNN\myproject\objectDetection\objectsDatasets\\training'
         # dataset_dir = 'F:\MaskRCNN\Mask_RCNN\myproject\objectDetection\objectsDatasets\\valing'
         # annotations = json.load(open(os.path.join(dataset_dir, "regions.json")))
-        annotationsPath = os.path.join(dataset_dir, "labels") #new
+        annotationsPath = os.path.join(dataset_dir, "label") #new
         labelNames = [x for x in os.listdir(annotationsPath) if ".png" in x] #new
+        print([i for i in labelNames if '20181210_092634' in i])
 
         '''
         Add images - New Version
@@ -191,9 +195,11 @@ class ObjectDetectionDataset(utils.Dataset):
 
         # Add images
         print("start to load images")
-        middle = int(len(labelNames) / 3)
-        print("middle",middle)
-        labelNames = labelNames[middle:]
+
+        # to reduce the dataset for multiple training use
+        # middle = int(len(labelNames) / 3)
+        # print("middle",middle)
+        # labelNames = labelNames[middle:]
 
         for name in labelNames:
 
@@ -201,27 +207,33 @@ class ObjectDetectionDataset(utils.Dataset):
             # path directly to polygons
             # Unfortunately, VIA doesn't include it in JSON, so we must read
             # the image. This is only managable since the dataset is tiny.
-            imageName = "rgb/" + name.split(".")[0] + ".jpg"
-            labelName = "labels/"+ name
-            thermalName = "thermals/" + name.split(".")[0] + ".jpg"
+            imageName = "/rgb/" + name.split(".")[0] + ".jpg"
+            labelName = "/label/"+ name
 
             # get paths
-            image_path = os.path.join(dataset_dir, imageName)
-            label_path = os.path.join(dataset_dir, labelName)
-            thermal_path = os.path.join(dataset_dir, thermalName)
+            image_path = dataset_dir + imageName
+            label_path = dataset_dir + labelName
+            # print(image_path, label_path)
 
             # get images
             label_image = skimage.io.imread(label_path)
             image = skimage.io.imread(image_path)
-            thermal_image = skimage.io.imread(thermal_path)
-            
-            thermal_image = thermal_image[:,:,0]
-            image = np.concatenate((image,thermal_image),axis=2)
+
+            # thermal channel added
+            if ADD_THERMAL_CHANNEL:
+	            thermalName = "thermal/" + name.split(".")[0] + ".jpg"
+	            thermal_path = os.path.join(dataset_dir, thermalName)
+	            thermal_image = skimage.io.imread(thermal_path)           
+	            thermal_image = thermal_image[:,:,0].reshape((image.shape[0], image.shape[1], 1))
+	            image = np.concatenate((image,thermal_image),axis=2)
 
             '''
             show the image to check
             '''
-            # plt.imshow(image)
+            # if ADD_THERMAL_CHANNEL:
+            # 	plt.imshow(image[:, :, 4])
+            # else:
+            # 	plt.imshow(image)
             # plt.show()
             # plt.imshow(label_image)
             # plt.show()
