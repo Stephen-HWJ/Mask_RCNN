@@ -584,19 +584,27 @@ if __name__ == '__main__':
 
         class_names = ['building_roof', 'ground_cars', 'building_facade', 'ground_cars', 'building_roof']
         # Load a random image from the images folder
-        IMAGE_DIR = os.path.join(ROOT_DIR, "myimages")
+        IMAGE_DIR = os.path.join(args.dataset, "rgb")
         file_names = next(os.walk(IMAGE_DIR))[2]
         print(file_names)
         # image = skimage.io.imread(os.path.join(IMAGE_DIR, random.choice(file_names)))
 
         for name in file_names:
             image = skimage.io.imread(os.path.join(IMAGE_DIR, name))
+            # thermal channel added
+            if ADD_THERMAL_CHANNEL:
+                thermal_path = os.path.join(args.dataset, "thermal")
+                thermal_path = os.path.join(thermal_path, name)
+                thermal_image = skimage.io.imread(thermal_path)           
+                thermal_image = thermal_image[:,:,0].reshape((image.shape[0], image.shape[1], 1))
+                image = np.concatenate((image,thermal_image),axis=2)
             # Run detection
             results = model.detect([image], verbose=1)
 
             # Visualize results
             r = results[0]
             # print(r['rois'])
+            # print(r)
             visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'],
                                         class_names, r['scores'])
 
