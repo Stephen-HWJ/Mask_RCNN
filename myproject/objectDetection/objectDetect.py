@@ -69,16 +69,15 @@ import re
 import time
 import random
 
-
+CHANGE_MODEL = False
 # Root directory of the project
 ROOT_DIR = os.path.abspath("../../")
 
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
 from mrcnn.config import Config
-ADD_THERMAL_CHANNEL = True
 if ADD_THERMAL_CHANNEL:
-	from mrcnn import model as modellib, utils
+	from mrcnn import model_my as modellib, utils
 else:
 	from mrcnn import model as modellib, utils
 
@@ -93,7 +92,7 @@ DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 
 # Path to trained weights file
 COCO_WEIGHTS_PATH = os.path.join(DEFAULT_LOGS_DIR, "mask_rcnn_objectdetection_0024.h5")
-
+ADD_THERMAL_CHANNEL = True
 
 '''
 ############################################################
