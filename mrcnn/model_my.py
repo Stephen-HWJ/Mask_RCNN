@@ -176,8 +176,8 @@ def resnet_graph(input_image, architecture, stage5=False, train_bn=True):
     """
     assert architecture in ["resnet50", "resnet101"]
 
-    A1, A2, A3, A4, A5 = resnet_graph_rgb(input_image[:, :, :3], architecture, stage5, train_bn)
-    B1, B2, B3, B4, B5 = resnet_graph_thermal(input_image[:, :, 3], architecture, stage5, train_bn)
+    A1, A2, A3, A4, A5 = resnet_graph_rgb(input_image[..., :3], architecture, stage5, train_bn)
+    B1, B2, B3, B4, B5 = resnet_graph_thermal(input_image[..., 3], architecture, stage5, train_bn)
     return [KL.Concatenate(A1, B1), KL.Concatenate(A2, B2), KL.Concatenate(A3, B3), KL.Concatenate(A4, B4), KL.Concatenate(A5, B5)]
 
 
@@ -2372,6 +2372,7 @@ class MaskRCNN():
             # All layers
             "all": ".*",
         }
+        print('trained layers:\n', layer_regex)
         if layers in layer_regex.keys():
             layers = layer_regex[layers]
 
@@ -2423,7 +2424,7 @@ class MaskRCNN():
             validation_steps=self.config.VALIDATION_STEPS,
             max_queue_size=100,
             workers=workers,
-            use_multiprocessing=True,
+            use_multiprocessing=False,
         )
         self.epoch = max(self.epoch, epochs)
 
