@@ -76,7 +76,12 @@ ROOT_DIR = os.path.abspath("../../")
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
 from mrcnn.config import Config
-from mrcnn import model as modellib, utils
+ADD_THERMAL_CHANNEL = True
+if ADD_THERMAL_CHANNEL:
+	from mrcnn import model as modellib, utils
+else:
+	from mrcnn import model as modellib, utils
+
 
 # add more functions
 from mrcnn import visualize
@@ -89,7 +94,6 @@ DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 # Path to trained weights file
 COCO_WEIGHTS_PATH = os.path.join(DEFAULT_LOGS_DIR, "mask_rcnn_objectdetection_0024.h5")
 
-ADD_THERMAL_CHANNEL = True
 
 '''
 ############################################################
@@ -373,11 +377,11 @@ def train(model):
     # Since we're using a very small dataset, and starting from
     # COCO trained weights, we don't need to train too long. Also,
     # no need to train all layers, just the heads should do it.
-    print("Training network heads")
+    print("Training **ALL** networks!")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
                 epochs=50,
-                layers='heads')
+                layers='all')
 
 
 '''
