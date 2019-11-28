@@ -1,0 +1,1 @@
+python3 objectDetect.py evaluate --dataset='/home/stephen/Proj/Mask_RCNN/myproject/objectDetection/objectsDatasets/test/' --weights='../../logs/objectdetection_4input_50epoch/mask_rcnn_objectdetection_0050.h5'

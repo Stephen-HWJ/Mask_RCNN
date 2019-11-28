@@ -107,7 +107,7 @@ class ObjectDetectionConfig(Config):
 
     if ADD_THERMAL_CHANNEL:
     	IMAGE_CHANNEL_COUNT = 4
-    	MEAN_PIXEL = np.array([123.7, 116.8, 103.9, 100]) # maybe change for later
+    	MEAN_PIXEL = np.array([123.7, 116.8, 103.9, 115.6]) # maybe change for later
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
@@ -160,10 +160,10 @@ class ObjectDetectionDataset(utils.Dataset):
         """
         # Add classes. We have five classes to add.
         
-        self.add_class("objectDetection", 1, "building_roof")
+        self.add_class("objectDetection", 1, "ground_cars")
         self.add_class("objectDetection", 2, "building_facade")
         self.add_class("objectDetection", 3, "building_equipment")
-        self.add_class("objectDetection", 4, "ground_cars")
+        self.add_class("objectDetection", 4, "building_roof")
         self.add_class("objectDetection", 5, "ground_equipment")
 
 
@@ -285,8 +285,9 @@ class ObjectDetectionDataset(utils.Dataset):
             image = np.where(image == classList[hasPolygonClass[i]], 1, 255)
             image = np.sum(image, axis=-1)
             image = np.where(image == 3, 1, 0)
-            # # # check if load the mask right
+            # check if load the mask right
             # plt.imshow(image, cmap=plt.get_cmap('gray'))
+            # plt.title(hasPolygonClass[i], fontsize=9)
             # plt.show()
 
             mask[:, :, i] = image
@@ -296,8 +297,6 @@ class ObjectDetectionDataset(utils.Dataset):
         class_ids = np.array(class_ids)
         # print("mask",mask.shape)
         # print("classid",class_ids)
-
-
         return mask.astype(np.bool), class_ids
 
     def image_reference(self, image_id):
@@ -361,9 +360,13 @@ def train(model):
         # cv2.imshow('image', image)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
-
+        # img_s = [image]
+        # titles = ['img']
         mask, class_ids = dataset_train.load_mask(image_id)
         visualize.display_top_masks(image, mask, class_ids, dataset_train.class_names)
+        # print(dataset_train.class_names)
+        # print(class_ids)
+        # visualize.display_top_masks(image, mask, class_ids, dataset_train.class_names, limit=5)
 
 
     # *** This training schedule is an example. Update to your needs ***
@@ -581,12 +584,11 @@ if __name__ == '__main__':
 
         '''
         '''
-
-        class_names = ['building_roof', 'ground_cars', 'building_facade', 'ground_cars', 'building_roof']
+        class_names = ['bg', 'ground_cars', 'building_facade', 'building_equipment', 'building_roof', 'ground_equipment']
         # Load a random image from the images folder
         IMAGE_DIR = os.path.join(args.dataset, "rgb")
         file_names = next(os.walk(IMAGE_DIR))[2]
-        print(file_names)
+        print(file_names[:10])
         # image = skimage.io.imread(os.path.join(IMAGE_DIR, random.choice(file_names)))
 
         for name in file_names:
@@ -603,10 +605,8 @@ if __name__ == '__main__':
 
             # Visualize results
             r = results[0]
-            # print(r['rois'])
-            # print(r)
-            visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'],
-                                        class_names, r['scores'])
+            print(r['rois'].shape, len(r['class_ids']), len(class_names))
+            visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], class_names, r['scores'])
 
 
     else:
