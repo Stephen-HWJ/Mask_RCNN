@@ -76,7 +76,7 @@ ROOT_DIR = os.path.abspath("../../")
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
 from mrcnn.config import Config
-if ADD_THERMAL_CHANNEL:
+if CHANGE_MODEL:
 	from mrcnn import model_my as modellib, utils
 else:
 	from mrcnn import model as modellib, utils
