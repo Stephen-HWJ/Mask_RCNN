@@ -379,7 +379,7 @@ def train(model):
     print("Training **ALL** networks!")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=100,
+                epochs=150,
                 layers='all')
 
 
