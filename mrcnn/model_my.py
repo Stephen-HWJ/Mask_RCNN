@@ -2191,7 +2191,7 @@ class MaskRCNN():
             layers = filter(lambda l: l.name not in exclude, layers)
 
         if include:
-            layers = filter(lambda l: re.fullmatch(include, l)==None, layers)
+            layers = filter(lambda l: l.name in include, layers)
 
         if by_name:
             saving.load_weights_from_hdf5_group_by_name(f, layers)
