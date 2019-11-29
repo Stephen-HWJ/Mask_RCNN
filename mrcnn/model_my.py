@@ -186,7 +186,7 @@ def resnet_graph(input_image, architecture, stage5=False, train_bn=True):
 
     C1, C2, C3, C4, C5 = KL.concatenate([A1, B1]), KL.concatenate([A2, B2]), KL.concatenate([A3, B3]), KL.concatenate([A4, B4]), KL.concatenate([A5, B5])
     print(C1.shape, C2.shape, C3.shape, C4.shape, C5.shape)
-    return [C1, C2, C3, C4, C5]
+    return [A1, A2, A3, A4, A5]
 
 
 
