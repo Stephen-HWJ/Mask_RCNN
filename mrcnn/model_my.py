@@ -177,7 +177,7 @@ def resnet_graph(input_image, architecture, stage5=False, train_bn=True):
     assert architecture in ["resnet50", "resnet101"]
 
     A1, A2, A3, A4, A5 = resnet_graph_rgb(input_image[..., :3], architecture, stage5, train_bn)
-    B1, B2, B3, B4, B5 = resnet_graph_thermal(tf.reshape(input_image[..., 3], [input_image.shape[0], input_image.shape[1], 1]), architecture, stage5, train_bn)
+    B1, B2, B3, B4, B5 = resnet_graph_thermal(tf.tensor([input_image[..., 3]]), architecture, stage5, train_bn)
     return [KL.Concatenate(A1, B1), KL.Concatenate(A2, B2), KL.Concatenate(A3, B3), KL.Concatenate(A4, B4), KL.Concatenate(A5, B5)]
 
 
