@@ -492,7 +492,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', required=False,
                         metavar="/path/to/balloon/dataset/",
                         help='Directory of the Balloon dataset')
-    parser.add_argument('--weights', required=True,
+    parser.add_argument('--weights', required=False,
                         metavar="/path/to/weights.h5",
                         help="Path to weights .h5 file or 'coco'")
     parser.add_argument('--logs', required=False,
@@ -539,22 +539,22 @@ if __name__ == '__main__':
                                   model_dir=args.logs)
 
     # Select weights file to load
-    if args.weights.lower() == "coco":
-        weights_path = COCO_WEIGHTS_PATH
-        # Download weights file
-        if not os.path.exists(weights_path):
-            utils.download_trained_weights(weights_path)
-    elif args.weights.lower() == "last":
-        # Find last trained weights
-        weights_path = model.find_last()
-    elif args.weights.lower() == "imagenet":
-        # Start from ImageNet trained weights
-        weights_path = model.get_imagenet_weights()
-    else:
-        weights_path = args.weights
-
-    # Load weights
     if args.weights:
+	    if args.weights.lower() == "coco":
+	        weights_path = COCO_WEIGHTS_PATH
+	        # Download weights file
+	        if not os.path.exists(weights_path):
+	            utils.download_trained_weights(weights_path)
+	    elif args.weights.lower() == "last":
+	        # Find last trained weights
+	        weights_path = model.find_last()
+	    elif args.weights.lower() == "imagenet":
+	        # Start from ImageNet trained weights
+	        weights_path = model.get_imagenet_weights()
+	    else:
+	        weights_path = args.weights
+
+    	# Load weights
 	    print("Loading weights ", weights_path)
 	    if args.weights.lower() == "coco":
 	        # Exclude the last layers because they require a matching
