@@ -176,7 +176,8 @@ def resnet_graph(input_image, architecture, stage5=False, train_bn=True):
     """
     assert architecture in ["resnet50", "resnet101"]
 
-    A1, A2, A3, A4, A5 = resnet_graph_rgb(input_image[..., :3], architecture, stage5, train_bn)
+    # A1, A2, A3, A4, A5 = resnet_graph_rgb(input_image[..., :3], architecture, stage5, train_bn)
+    A1, A2, A3, A4, A5 = resnet_graph_rgb(input_image, architecture, stage5, train_bn)
     print(A1.shape, A2.shape, A3.shape, A4.shape, A5.shape)
 
     t_in = tf.convert_to_tensor(input_image[..., 3])
