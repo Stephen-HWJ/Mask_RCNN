@@ -203,8 +203,8 @@ def resnet_graph_rgb(input_image, architecture, stage5=False, train_bn=True):
     assert architecture in ["resnet50", "resnet101"]
     # Stage 1
     x = KL.ZeroPadding2D((3, 3))(input_image)
-    x = KL.Conv2D(64, (7, 7), strides=(2, 2), name='conv1', use_bias=True)(x)
-    x = BatchNorm(name='bn_conv1')(x, training=train_bn)
+    x = KL.Conv2D(64, (7, 7), strides=(2, 2), name='conv1_rgb', use_bias=True)(x)
+    x = BatchNorm(name='bn_conv1_rgb')(x, training=train_bn)
     x = KL.Activation('relu')(x)
     C1 = x = KL.MaxPooling2D((3, 3), strides=(2, 2), padding="same")(x)
     # Stage 2
@@ -241,8 +241,8 @@ def resnet_graph_thermal(input_image, architecture, stage5=False, train_bn=True)
     assert architecture in ["resnet50", "resnet101"]
     # Stage 1
     x = KL.ZeroPadding2D((3, 3))(input_image)
-    x = KL.Conv2D(64, (7, 7), strides=(2, 2), name='conv1', use_bias=True)(x)
-    x = BatchNorm(name='bn_conv1')(x, training=train_bn)
+    x = KL.Conv2D(64, (7, 7), strides=(2, 2), name='conv1_thermal', use_bias=True)(x)
+    x = BatchNorm(name='bn_conv1_thermal')(x, training=train_bn)
     x = KL.Activation('relu')(x)
     C1 = x = KL.MaxPooling2D((3, 3), strides=(2, 2), padding="same")(x)
     # Stage 2
