@@ -564,6 +564,8 @@ if __name__ == '__main__':
     else:
     	if ADD_THERMAL_CHANNEL:
     		model.load_weights(weights_path, by_name=True, exclude=['conv1'])
+    	elif CHANGE_MODEL:
+    		model.load_weights(weights_path, by_name=True, exclude=[r"(mrcnn\_.*)|(rpn\_.*)|(fpn\_.*)"])
     	else:
     		model.load_weights(weights_path, by_name=True)
 
