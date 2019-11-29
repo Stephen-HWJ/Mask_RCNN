@@ -69,7 +69,7 @@ import re
 import time
 import random
 
-CHANGE_MODEL = False
+CHANGE_MODEL = True
 # Root directory of the project
 ROOT_DIR = os.path.abspath("../../")
 
@@ -565,7 +565,7 @@ if __name__ == '__main__':
     	if ADD_THERMAL_CHANNEL:
     		model.load_weights(weights_path, by_name=True, exclude=['conv1'])
     	elif CHANGE_MODEL:
-    		model.load_weights(weights_path, by_name=True, exclude=[r"(mrcnn\_.*)|(rpn\_.*)|(fpn\_.*)"])
+    		model.load_weights(weights_path, by_name=True, include=r"(mrcnn\_.*)|(rpn\_.*)|(fpn\_.*)")
     	else:
     		model.load_weights(weights_path, by_name=True)
 

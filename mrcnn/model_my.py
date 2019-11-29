@@ -189,7 +189,7 @@ def resnet_graph(input_image, architecture, stage5=False, train_bn=True):
     print(B1.shape, B2.shape, B3.shape, B4.shape, B5.shape)
 
     C1, C2, C3, C4, C5 = KL.Concatenate()([A1, B1]), KL.Concatenate()([A2, B2]), KL.Concatenate()([A3, B3]), KL.Concatenate()([A4, B4]), KL.Concatenate()([A5, B5])
-    # print(C1.shape, C2.shape, C3.shape, C4.shape, C5.shape)
+    print(C1.shape, C2.shape, C3.shape, C4.shape, C5.shape)
     return [C1, C2, C3, C4, C5]
 
 
@@ -2156,7 +2156,7 @@ class MaskRCNN():
         checkpoint = os.path.join(dir_name, checkpoints[-1])
         return checkpoint
 
-    def load_weights(self, filepath, by_name=False, exclude=None):
+    def load_weights(self, filepath, by_name=False, exclude=None, include=None):
         """Modified version of the corresponding Keras function with
         the addition of multi-GPU support and the ability to exclude
         some layers from loading.
@@ -2189,6 +2189,9 @@ class MaskRCNN():
         # Exclude some layers
         if exclude:
             layers = filter(lambda l: l.name not in exclude, layers)
+
+        if include:
+            layers = filter(lambda l: re.fullmatch(include, l), layers)
 
         if by_name:
             saving.load_weights_from_hdf5_group_by_name(f, layers)
