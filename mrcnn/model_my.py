@@ -183,14 +183,14 @@ def resnet_graph(input_image, architecture, stage5=False, train_bn=True):
 
     # A1, A2, A3, A4, A5 = resnet_graph_rgb(input_image[..., :3], architecture, stage5, train_bn)
     A1, A2, A3, A4, A5 = resnet_graph_rgb(KL.Lambda(slice)(input_image), architecture, stage5, train_bn)
-    # print(A1.shape, A2.shape, A3.shape, A4.shape, A5.shape)
+    print(A1.shape, A2.shape, A3.shape, A4.shape, A5.shape)
 
     B1, B2, B3, B4, B5 = resnet_graph_thermal(KL.Lambda(slice)(input_image), architecture, stage5, train_bn)
-    # print(B1.shape, B2.shape, B3.shape, B4.shape, B5.shape)
+    print(B1.shape, B2.shape, B3.shape, B4.shape, B5.shape)
 
     C1, C2, C3, C4, C5 = KL.Concatenate([A1, B1]), KL.Concatenate([A2, B2]), KL.Concatenate([A3, B3]), KL.Concatenate([A4, B4]), KL.Concatenate([A5, B5])
-    # print(C1.shape, C2.shape, C3.shape, C4.shape, C5.shape)
-    return [B1, B2, B3, B4, B5]
+    print(C1.shape, C2.shape, C3.shape, C4.shape, C5.shape)
+    return [C1, C2, C3, C4, C5]
 
 
 
