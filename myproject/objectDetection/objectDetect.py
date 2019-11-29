@@ -106,7 +106,7 @@ class ObjectDetectionConfig(Config):
     # Give the configuration a recognizable name
     NAME = "objectDetection"
 
-    GPU_COUNT = 2
+    GPU_COUNT = 3
 
     if ADD_THERMAL_CHANNEL:
     	IMAGE_CHANNEL_COUNT = 4
