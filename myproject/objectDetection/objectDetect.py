@@ -122,6 +122,19 @@ class ObjectDetectionConfig(Config):
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 250
 
+    BACKBONE = 'resnet50'    
+
+    IMAGE_MIN_DIM = 256
+    IMAGE_MAX_DIM = 512
+
+    TRAIN_ROIS_PER_IMAGE = 128
+
+    MAX_GT_INSTANCES = 10
+
+    RPN_TRAIN_ANCHORS_PER_IMAGE = 128
+
+    RPN_ANCHOR_SCALES = (32, 64, 128, 256)
+
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
 
@@ -612,13 +625,15 @@ if __name__ == '__main__':
                 thermal_image = skimage.io.imread(thermal_path)           
                 thermal_image = thermal_image[:,:,0].reshape((image.shape[0], image.shape[1], 1))
                 image = np.concatenate((image,thermal_image),axis=2)
+
             # Run detection
+            print(image.shape)
             results = model.detect([image], verbose=1)
 
             # Visualize results
             r = results[0]
-            print(r['rois'].shape, len(r['class_ids']), len(class_names))
-            visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], class_names, r['scores'])
+            print(r['rois'].shape, len(r['class_ids']))
+            visualize.display_instances(image[..., :3], r['rois'], r['masks'], r['class_ids'], class_names, r['scores'])
 
 
     else:
