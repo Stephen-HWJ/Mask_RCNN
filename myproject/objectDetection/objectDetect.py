@@ -565,7 +565,13 @@ if __name__ == '__main__':
     	if ADD_THERMAL_CHANNEL:
     		model.load_weights(weights_path, by_name=True, exclude=['conv1'])
     	elif CHANGE_MODEL:
-    		model.load_weights(weights_path, by_name=True, include=r"(mrcnn\_.*)|(rpn\_.*)|(fpn\_.*)")
+    		include = ['fpn_c5p5', 'fpn_c4p4', 'fpn_c3p3', 'fpn_c2p2', 'fpn_p5', 
+    		'fpn_p2', 'fpn_p3', 'fpn_p4', 'rpn_model', 'rpn_conv_shared', 'rpn_class_raw', 
+    		'rpn_bbox_pred', 'mrcnn_mask_conv1', 'mrcnn_mask_bn1', 'mrcnn_mask_conv2', 
+    		'mrcnn_mask_bn2', 'mrcnn_class_conv1', 'mrcnn_class_bn1', 'mrcnn_mask_conv3', 
+    		'mrcnn_mask_bn3', 'mrcnn_class_conv2', 'mrcnn_class_bn2', 'mrcnn_mask_conv4', 
+    		'mrcnn_mask_bn4', 'mrcnn_bbox_fc, mrcnn_mask_deconv' ,' mrcnn_class_logits', 'mrcnn_mask']
+    		model.load_weights(weights_path, by_name=True, include=include)
     	else:
     		model.load_weights(weights_path, by_name=True)
 
